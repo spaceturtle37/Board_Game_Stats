@@ -1,5 +1,5 @@
 
-import Base: size
+import Base: size, show
 import DataFrames: DataFrame
 
 """
@@ -34,11 +34,15 @@ ncolors(cards::ChargeCards) = length(cards.time_records)
 Base.size(cards::ChargeCards, col) = length(cards.time_records[col])
 Base.size(cards::ChargeCards) = (size(cards, 1), ncolors(cards))
 
+current_card(cards::ChargeCards, color, time) = cards.time_records[color][time]
+current_hand(cards::ChargeCards, time) = [ current_card(cards, color, time) for color ∈ eachindex(cards.time_records) ]
+
 function add_hand!(cards::ChargeCards, color_vector)
     @assert ncolors(cards) == length(color_vector) "Supplied vector is of a different length than $(ncolors(cards))."
     for col ∈ eachindex(color_vector)
         push!(cards.time_records[col], color_vector[col])
     end
+    return cards
 end
 
 function initialize_random_cards!(cards::ChargeCards{T}, cards_per_hand = 10) where T
@@ -61,3 +65,6 @@ function DataFrame(cards::ChargeCards)
     @assert ncolors(cards) == 2 || ncolors(cards) == 3 "You must supply a set of color labels since the number of colors equals $(ncolors(cards)) (> 2,3)"
     return DataFrame(cards, ncolors(cards) == 2 ? two_color_labels : three_color_labels)
 end
+
+Base.show(io::IO, cards::ChargeCards) = Base.show(io, DataFrame(cards))
+Base.show(cards::ChargeCards) = Base.show(stdout, cards)
